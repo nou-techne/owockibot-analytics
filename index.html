@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>owockibot Analytics</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body {
+      background: #0a0a0a;
+      color: #e0e0e0;
+      font-family: 'Berkeley Mono', 'Courier New', monospace;
+      padding: 2rem;
+      line-height: 1.6;
+    }
+    
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+    
+    h1 {
+      color: #f4c542;
+      font-size: 2.5rem;
+      margin-bottom: 0.5rem;
+      text-align: center;
+    }
+    
+    .subtitle {
+      text-align: center;
+      color: #999;
+      margin-bottom: 3rem;
+      font-size: 0.9rem;
+    }
+    
+    .loading {
+      text-align: center;
+      color: #f4c542;
+      font-size: 1.2rem;
+      margin: 4rem 0;
+    }
+    
+    .error {
+      text-align: center;
+      color: #ff4444;
+      padding: 2rem;
+      border: 1px solid #ff4444;
+      border-radius: 8px;
+      margin: 2rem 0;
+    }
+    
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 3rem;
+    }
+    
+    .stat-card {
+      background: rgba(244, 197, 66, 0.05);
+      border: 1px solid rgba(244, 197, 66, 0.3);
+      border-radius: 8px;
+      padding: 1.5rem;
+      transition: all 0.3s ease;
+    }
+    
+    .stat-card:hover {
+      border-color: #f4c542;
+      box-shadow: 0 0 20px rgba(244, 197, 66, 0.2);
+    }
+    
+    .stat-label {
+      font-size: 0.85rem;
+      color: #999;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 0.5rem;
+    }
+    
+    .stat-value {
+      font-size: 2rem;
+      color: #f4c542;
+      font-weight: bold;
+    }
+    
+    .chart-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+      margin-bottom: 3rem;
+    }
+    
+    .chart-container {
+      background: rgba(244, 197, 66, 0.03);
+      border: 1px solid rgba(244, 197, 66, 0.2);
+      border-radius: 8px;
+      padding: 1.5rem;
+    }
+    
+    .chart-title {
+      color: #f4c542;
+      font-size: 1.1rem;
+      margin-bottom: 1rem;
+      text-align: center;
+    }
+    
+    .leaderboard {
+      background: rgba(244, 197, 66, 0.03);
+      border: 1px solid rgba(244, 197, 66, 0.2);
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin-bottom: 3rem;
+    }
+    
+    .leaderboard h2 {
+      color: #f4c542;
+      font-size: 1.3rem;
+      margin-bottom: 1rem;
+    }
+    
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    
+    th {
+      background: rgba(244, 197, 66, 0.1);
+      color: #f4c542;
+      padding: 0.75rem;
+      text-align: left;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    
+    td {
+      padding: 0.75rem;
+      border-bottom: 1px solid rgba(244, 197, 66, 0.1);
+    }
+    
+    tr:hover {
+      background: rgba(244, 197, 66, 0.05);
+    }
+    
+    .rank {
+      color: #f4c542;
+      font-weight: bold;
+      width: 50px;
+    }
+    
+    .wallet {
+      font-family: monospace;
+      color: #aaa;
+    }
+    
+    footer {
+      text-align: center;
+      color: #666;
+      font-size: 0.85rem;
+      margin-top: 4rem;
+      padding-top: 2rem;
+      border-top: 1px solid rgba(244, 197, 66, 0.2);
+    }
+    
+    footer a {
+      color: #f4c542;
+      text-decoration: none;
+    }
+    
+    footer a:hover {
+      text-decoration: underline;
+    }
+    
+    @media (max-width: 768px) {
+      .chart-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      h1 {
+        font-size: 1.8rem;
+      }
+      
+      .stat-value {
+        font-size: 1.5rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🐝 owockibot Analytics</h1>
+    <div class="subtitle">Bounty ecosystem metrics · Real-time data from owockibot.xyz/api</div>
+    
+    <div id="loading" class="loading">Loading bounty data...</div>
+    <div id="error" class="error" style="display:none;"></div>
+    
+    <div id="content" style="display:none;">
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">Total Bounties</div>
+          <div class="stat-value" id="total-bounties">—</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Total Paid Out</div>
+          <div class="stat-value" id="total-paid">—</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Unique Builders</div>
+          <div class="stat-value" id="unique-builders">—</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Median Completion</div>
+          <div class="stat-value" id="median-completion">—</div>
+        </div>
+      </div>
+      
+      <div class="chart-grid">
+        <div class="chart-container">
+          <div class="chart-title">Bounty Activity Over Time</div>
+          <canvas id="activity-chart"></canvas>
+        </div>
+        <div class="chart-container">
+          <div class="chart-title">Status Distribution</div>
+          <canvas id="status-chart"></canvas>
+        </div>
+      </div>
+      
+      <div class="chart-container" style="margin-bottom: 3rem;">
+        <div class="chart-title">Weekly USDC Paid Out</div>
+        <canvas id="usdc-chart"></canvas>
+      </div>
+      
+      <div class="leaderboard">
+        <h2>🏆 Top Builders</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Rank</th>
+              <th>Builder</th>
+              <th>Completed</th>
+              <th>USDC Earned</th>
+            </tr>
+          </thead>
+          <tbody id="leaderboard-body">
+          </tbody>
+        </table>
+      </div>
+    </div>
+    
+    <footer>
+      Data from <a href="https://owockibot.xyz/api" target="_blank">owockibot.xyz/api</a> · 
+      Built by Nou · 
+      <span style="font-family: monospace;">0xC376...d3e2</span>
+    </footer>
+  </div>
+  
+  <script>
+    // Utility functions
+    function truncateAddress(addr) {
+      if (!addr) return '—';
+      return `${addr.slice(0, 6)}...${addr.slice(-4)}`;
+    }
+    
+    function getISOWeek(date) {
+      const d = new Date(date);
+      d.setHours(0, 0, 0, 0);
+      d.setDate(d.getDate() + 4 - (d.getDay() || 7));
+      const yearStart = new Date(d.getFullYear(), 0, 1);
+      const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+      return `${d.getFullYear()}-W${String(weekNo).padStart(2, '0')}`;
+    }
+    
+    function formatDuration(ms) {
+      const hours = ms / (1000 * 60 * 60);
+      if (hours < 48) {
+        return `${Math.round(hours)}h`;
+      }
+      const days = hours / 24;
+      return `${Math.round(days)}d`;
+    }
+    
+    function median(arr) {
+      if (arr.length === 0) return 0;
+      const sorted = [...arr].sort((a, b) => a - b);
+      const mid = Math.floor(sorted.length / 2);
+      return sorted.length % 2 === 0 
+        ? (sorted[mid - 1] + sorted[mid]) / 2 
+        : sorted[mid];
+    }
+    
+    // Main data loading
+    async function loadData() {
+      try {
+        const [bountiesRes, statsRes] = await Promise.all([
+          fetch('https://www.owockibot.xyz/api/bounty-board'),
+          fetch('https://www.owockibot.xyz/api/bounty-board/stats')
+        ]);
+        
+        if (!bountiesRes.ok || !statsRes.ok) {
+          throw new Error('Failed to fetch data');
+        }
+        
+        const bounties = await bountiesRes.json();
+        const stats = await statsRes.json();
+        
+        renderDashboard(bounties, stats);
+        
+      } catch (error) {
+        document.getElementById('loading').style.display = 'none';
+        const errorEl = document.getElementById('error');
+        errorEl.textContent = `Error loading data: ${error.message}`;
+        errorEl.style.display = 'block';
+      }
+    }
+    
+    function renderDashboard(bounties, stats) {
+      // Calculate derived metrics
+      const completed = bounties.filter(b => b.status === 'completed');
+      const uniqueBuilders = new Set(
+        completed
+          .map(b => b.claimer_address)
+          .filter(addr => addr && addr.trim())
+      ).size;
+      
+      const completionTimes = completed
+        .map(b => new Date(b.updated_at) - new Date(b.created_at))
+        .filter(t => t > 0);
+      
+      const medianCompletion = median(completionTimes);
+      
+      // Update stat cards
+      document.getElementById('total-bounties').textContent = stats.total;
+      document.getElementById('total-paid').textContent = `$${stats.total_volume_usdc}`;
+      document.getElementById('unique-builders').textContent = uniqueBuilders;
+      document.getElementById('median-completion').textContent = formatDuration(medianCompletion);
+      
+      // Render charts
+      renderActivityChart(bounties);
+      renderStatusChart(stats);
+      renderUSDCChart(bounties);
+      renderLeaderboard(bounties);
+      
+      // Show content
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('content').style.display = 'block';
+    }
+    
+    function renderActivityChart(bounties) {
+      const weeklyData = {};
+      
+      bounties.forEach(b => {
+        const createdWeek = getISOWeek(b.created_at);
+        if (!weeklyData[createdWeek]) {
+          weeklyData[createdWeek] = { created: 0, completed: 0 };
+        }
+        weeklyData[createdWeek].created++;
+        
+        if (b.status === 'completed') {
+          const completedWeek = getISOWeek(b.updated_at);
+          if (!weeklyData[completedWeek]) {
+            weeklyData[completedWeek] = { created: 0, completed: 0 };
+          }
+          weeklyData[completedWeek].completed++;
+        }
+      });
+      
+      const weeks = Object.keys(weeklyData).sort();
+      let cumulativeCreated = 0;
+      let cumulativeCompleted = 0;
+      
+      const createdData = weeks.map(week => {
+        cumulativeCreated += weeklyData[week].created;
+        return cumulativeCreated;
+      });
+      
+      const completedData = weeks.map(week => {
+        cumulativeCompleted += weeklyData[week].completed;
+        return cumulativeCompleted;
+      });
+      
+      new Chart(document.getElementById('activity-chart'), {
+        type: 'line',
+        data: {
+          labels: weeks,
+          datasets: [
+            {
+              label: 'Created',
+              data: createdData,
+              borderColor: '#f4c542',
+              backgroundColor: 'rgba(244, 197, 66, 0.1)',
+              tension: 0.3
+            },
+            {
+              label: 'Completed',
+              data: completedData,
+              borderColor: '#4CAF50',
+              backgroundColor: 'rgba(76, 175, 80, 0.1)',
+              tension: 0.3
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: true,
+          plugins: {
+            legend: {
+              labels: { color: '#e0e0e0' }
+            }
+          },
+          scales: {
+            x: { 
+              ticks: { color: '#999' },
+              grid: { color: 'rgba(244, 197, 66, 0.1)' }
+            },
+            y: { 
+              ticks: { color: '#999' },
+              grid: { color: 'rgba(244, 197, 66, 0.1)' }
+            }
+          }
+        }
+      });
+    }
+    
+    function renderStatusChart(stats) {
+      new Chart(document.getElementById('status-chart'), {
+        type: 'doughnut',
+        data: {
+          labels: ['Completed', 'Claimed', 'Submitted', 'Open', 'Cancelled'],
+          datasets: [{
+            data: [
+              stats.completed,
+              stats.claimed,
+              stats.submitted,
+              stats.open,
+              stats.cancelled
+            ],
+            backgroundColor: [
+              '#4CAF50',
+              '#2196F3',
+              '#FF9800',
+              '#f4c542',
+              '#666'
+            ]
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: true,
+          plugins: {
+            legend: {
+              position: 'bottom',
+              labels: { color: '#e0e0e0' }
+            }
+          }
+        }
+      });
+    }
+    
+    function renderUSDCChart(bounties) {
+      const weeklyUSDC = {};
+      
+      bounties
+        .filter(b => b.status === 'completed')
+        .forEach(b => {
+          const week = getISOWeek(b.updated_at);
+          weeklyUSDC[week] = (weeklyUSDC[week] || 0) + b.reward_usdc;
+        });
+      
+      const weeks = Object.keys(weeklyUSDC).sort();
+      const values = weeks.map(w => weeklyUSDC[w]);
+      
+      new Chart(document.getElementById('usdc-chart'), {
+        type: 'bar',
+        data: {
+          labels: weeks,
+          datasets: [{
+            label: 'USDC Paid',
+            data: values,
+            backgroundColor: 'rgba(244, 197, 66, 0.6)',
+            borderColor: '#f4c542',
+            borderWidth: 1
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: true,
+          plugins: {
+            legend: {
+              labels: { color: '#e0e0e0' }
+            }
+          },
+          scales: {
+            x: { 
+              ticks: { color: '#999' },
+              grid: { color: 'rgba(244, 197, 66, 0.1)' }
+            },
+            y: { 
+              ticks: { color: '#999' },
+              grid: { color: 'rgba(244, 197, 66, 0.1)' }
+            }
+          }
+        }
+      });
+    }
+    
+    function renderLeaderboard(bounties) {
+      const builders = {};
+      
+      bounties
+        .filter(b => b.status === 'completed' && b.claimer_address)
+        .forEach(b => {
+          const addr = b.claimer_address;
+          if (!builders[addr]) {
+            builders[addr] = { completed: 0, usdc: 0 };
+          }
+          builders[addr].completed++;
+          builders[addr].usdc += b.reward_usdc;
+        });
+      
+      const sorted = Object.entries(builders)
+        .sort((a, b) => b[1].usdc - a[1].usdc)
+        .slice(0, 10);
+      
+      const tbody = document.getElementById('leaderboard-body');
+      tbody.innerHTML = sorted.map(([addr, data], idx) => `
+        <tr>
+          <td class="rank">#${idx + 1}</td>
+          <td class="wallet">${truncateAddress(addr)}</td>
+          <td>${data.completed}</td>
+          <td style="color: #f4c542; font-weight: bold;">$${data.usdc}</td>
+        </tr>
+      `).join('');
+    }
+    
+    // Initialize on load
+    loadData();
+  </script>
+</body>
+</html>
