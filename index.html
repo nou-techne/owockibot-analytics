@@ -4,206 +4,284 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>owockibot Analytics</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant:ital,wght@0,400;0,600;1,400&family=Source+Serif+4:wght@300;400;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    
+    :root {
+      --bg: #0a0a0a;
+      --surface: #141414;
+      --surface2: #1a1a1a;
+      --border: #2a2a2a;
+      --border2: #333333;
+      --text: #c8c2ba;
+      --text-bright: #ece6de;
+      --muted: #777777;
+      --faint: #444444;
+      --primary: #c4956a;
+      --primary-dim: #8a6545;
+      --primary-glow: rgba(196, 149, 106, 0.08);
+      --green: #8aba8a;
+      --red: #c47070;
+      --blue: #7a9ab5;
+      --amber: #c4956a;
+      --font-display: 'Cormorant', serif;
+      --font-body: 'Source Serif 4', serif;
+      --font-mono: 'IBM Plex Mono', monospace;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
     body {
-      background: #0a0a0a;
-      color: #e0e0e0;
-      font-family: 'Berkeley Mono', 'Courier New', monospace;
-      padding: 2rem;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-body);
+      font-size: 15px;
       line-height: 1.6;
     }
-    
-    .container {
+
+    header {
+      padding: 32px 40px 20px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    header h1 {
+      font-family: var(--font-display);
+      font-size: 2.4rem;
+      font-weight: 600;
+      color: var(--primary);
+      letter-spacing: -0.02em;
+      margin-bottom: 4px;
+    }
+
+    header .subtitle {
+      font-size: 0.85rem;
+      color: var(--muted);
+      font-family: var(--font-mono);
+    }
+
+    main {
+      padding: 32px 40px;
       max-width: 1400px;
-      margin: 0 auto;
     }
-    
-    h1 {
-      color: #f4c542;
-      font-size: 2.5rem;
-      margin-bottom: 0.5rem;
-      text-align: center;
-    }
-    
-    .subtitle {
-      text-align: center;
-      color: #999;
-      margin-bottom: 3rem;
-      font-size: 0.9rem;
-    }
-    
+
     .loading {
       text-align: center;
-      color: #f4c542;
-      font-size: 1.2rem;
+      color: var(--primary);
+      font-size: 1rem;
       margin: 4rem 0;
+      font-family: var(--font-mono);
     }
-    
+
     .error {
       text-align: center;
-      color: #ff4444;
+      color: var(--red);
       padding: 2rem;
-      border: 1px solid #ff4444;
-      border-radius: 8px;
+      border: 1px solid var(--red);
+      border-radius: 4px;
       margin: 2rem 0;
+      font-family: var(--font-mono);
+      font-size: 0.9rem;
     }
-    
+
+    /* Stats row */
     .stats-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 1.5rem;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1px;
+      background: var(--border);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      overflow: hidden;
       margin-bottom: 3rem;
     }
-    
+
     .stat-card {
-      background: rgba(244, 197, 66, 0.05);
-      border: 1px solid rgba(244, 197, 66, 0.3);
-      border-radius: 8px;
+      background: var(--surface);
       padding: 1.5rem;
-      transition: all 0.3s ease;
+      transition: background 0.2s ease;
     }
-    
+
     .stat-card:hover {
-      border-color: #f4c542;
-      box-shadow: 0 0 20px rgba(244, 197, 66, 0.2);
+      background: var(--surface2);
     }
-    
+
     .stat-label {
-      font-size: 0.85rem;
-      color: #999;
+      font-size: 0.72rem;
+      color: var(--muted);
       text-transform: uppercase;
-      letter-spacing: 1px;
+      letter-spacing: 0.12em;
+      font-family: var(--font-mono);
       margin-bottom: 0.5rem;
     }
-    
+
     .stat-value {
       font-size: 2rem;
-      color: #f4c542;
-      font-weight: bold;
+      color: var(--primary);
+      font-family: var(--font-display);
+      font-weight: 600;
+      line-height: 1;
     }
-    
+
+    /* Section headers */
+    .section-head {
+      font-size: 0.72rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--muted);
+      font-family: var(--font-mono);
+      margin-bottom: 1rem;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    /* Charts */
     .chart-grid {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: 2fr 1fr;
       gap: 2rem;
-      margin-bottom: 3rem;
+      margin-bottom: 2rem;
     }
-    
+
     .chart-container {
-      background: rgba(244, 197, 66, 0.03);
-      border: 1px solid rgba(244, 197, 66, 0.2);
-      border-radius: 8px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
       padding: 1.5rem;
     }
-    
-    .chart-title {
-      color: #f4c542;
-      font-size: 1.1rem;
-      margin-bottom: 1rem;
-      text-align: center;
+
+    .chart-container:hover {
+      border-color: var(--border2);
     }
-    
+
+    .chart-wide {
+      margin-bottom: 2rem;
+    }
+
+    /* Leaderboard */
     .leaderboard {
-      background: rgba(244, 197, 66, 0.03);
-      border: 1px solid rgba(244, 197, 66, 0.2);
-      border-radius: 8px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
       padding: 1.5rem;
       margin-bottom: 3rem;
     }
-    
-    .leaderboard h2 {
-      color: #f4c542;
-      font-size: 1.3rem;
-      margin-bottom: 1rem;
-    }
-    
+
     table {
       width: 100%;
       border-collapse: collapse;
-    }
-    
-    th {
-      background: rgba(244, 197, 66, 0.1);
-      color: #f4c542;
-      padding: 0.75rem;
-      text-align: left;
+      font-family: var(--font-mono);
       font-size: 0.85rem;
+    }
+
+    th {
+      text-align: left;
+      padding: 0.6rem 0.75rem;
+      font-size: 0.7rem;
       text-transform: uppercase;
-      letter-spacing: 1px;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+      border-bottom: 1px solid var(--border);
     }
-    
+
     td {
-      padding: 0.75rem;
-      border-bottom: 1px solid rgba(244, 197, 66, 0.1);
+      padding: 0.65rem 0.75rem;
+      border-bottom: 1px solid var(--border);
+      color: var(--text);
     }
-    
-    tr:hover {
-      background: rgba(244, 197, 66, 0.05);
+
+    tr:last-child td { border-bottom: none; }
+
+    tr:hover td {
+      background: var(--primary-glow);
     }
-    
+
     .rank {
-      color: #f4c542;
-      font-weight: bold;
+      color: var(--primary);
       width: 50px;
     }
-    
+
     .wallet {
-      font-family: monospace;
-      color: #aaa;
+      color: var(--muted);
     }
-    
+
+    .usdc-value {
+      color: var(--primary);
+    }
+
+    /* Footer */
     footer {
-      text-align: center;
-      color: #666;
-      font-size: 0.85rem;
-      margin-top: 4rem;
-      padding-top: 2rem;
-      border-top: 1px solid rgba(244, 197, 66, 0.2);
+      padding: 24px 40px 32px;
+      border-top: 1px solid var(--border);
+      font-size: 0.78rem;
+      color: var(--muted);
     }
-    
+
     footer a {
-      color: #f4c542;
+      color: var(--muted);
       text-decoration: none;
     }
-    
+
     footer a:hover {
-      text-decoration: underline;
+      color: var(--primary);
     }
-    
+
+    .footer-intro {
+      line-height: 1.6;
+      margin-bottom: 14px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .footer-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1.5rem;
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+    }
+
+    .footer-links a { color: var(--muted); }
+    .footer-links a:hover { color: var(--primary); }
+
     @media (max-width: 768px) {
+      header, main, footer {
+        padding-left: 20px;
+        padding-right: 20px;
+      }
+
       .chart-grid {
         grid-template-columns: 1fr;
       }
-      
-      h1 {
+
+      header h1 {
         font-size: 1.8rem;
-      }
-      
-      .stat-value {
-        font-size: 1.5rem;
       }
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>🐝 owockibot Analytics</h1>
-    <div class="subtitle">Bounty ecosystem metrics · Real-time data from owockibot.xyz/api</div>
-    
-    <div id="loading" class="loading">Loading bounty data...</div>
+
+  <header>
+    <h1>owockibot Analytics</h1>
+    <div class="subtitle">Bounty ecosystem metrics · live data from owockibot.xyz/api</div>
+  </header>
+
+  <main>
+    <div id="loading" class="loading">Loading bounty data…</div>
     <div id="error" class="error" style="display:none;"></div>
-    
+
     <div id="content" style="display:none;">
+
       <div class="stats-grid">
         <div class="stat-card">
           <div class="stat-label">Total Bounties</div>
           <div class="stat-value" id="total-bounties">—</div>
         </div>
         <div class="stat-card">
-          <div class="stat-label">Total Paid Out</div>
+          <div class="stat-label">USDC Paid Out</div>
           <div class="stat-value" id="total-paid">—</div>
         </div>
         <div class="stat-card">
@@ -214,26 +292,34 @@
           <div class="stat-label">Median Completion</div>
           <div class="stat-value" id="median-completion">—</div>
         </div>
+        <div class="stat-card">
+          <div class="stat-label">Completed</div>
+          <div class="stat-value" id="stat-completed">—</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Open Now</div>
+          <div class="stat-value" id="stat-open">—</div>
+        </div>
       </div>
-      
+
       <div class="chart-grid">
         <div class="chart-container">
-          <div class="chart-title">Bounty Activity Over Time</div>
+          <div class="section-head">Bounty Activity Over Time</div>
           <canvas id="activity-chart"></canvas>
         </div>
         <div class="chart-container">
-          <div class="chart-title">Status Distribution</div>
+          <div class="section-head">Status Distribution</div>
           <canvas id="status-chart"></canvas>
         </div>
       </div>
-      
-      <div class="chart-container" style="margin-bottom: 3rem;">
-        <div class="chart-title">Weekly USDC Paid Out</div>
+
+      <div class="chart-container chart-wide">
+        <div class="section-head">Weekly USDC Paid Out</div>
         <canvas id="usdc-chart"></canvas>
       </div>
-      
+
       <div class="leaderboard">
-        <h2>🏆 Top Builders</h2>
+        <div class="section-head">Top Builders</div>
         <table>
           <thead>
             <tr>
@@ -243,299 +329,242 @@
               <th>USDC Earned</th>
             </tr>
           </thead>
-          <tbody id="leaderboard-body">
-          </tbody>
+          <tbody id="leaderboard-body"></tbody>
         </table>
       </div>
+
+    </div><!-- /content -->
+  </main>
+
+  <footer>
+    <div class="footer-intro">
+      Built by <a href="https://techne.institute" target="_blank">Techne Institute</a> /
+      <a href="https://regenhub.xyz" target="_blank">RegenHub, LCA</a> in Boulder, Colorado.
+      RegenHub's public benefit is cultivating scenius — collective intelligence that emerges when people share sustained proximity.
+      This tool is an expression of that benefit: making the owockibot bounty ecosystem legible, tracking how builders and agents coordinate to do ecological and infrastructural work, freely accessible to anyone participating in the swarm.
     </div>
-    
-    <footer>
-      Data from <a href="https://owockibot.xyz/api" target="_blank">owockibot.xyz/api</a> · 
-      Built by Nou · 
-      <span style="font-family: monospace;">0xC376...d3e2</span>
-    </footer>
-  </div>
-  
+    <div class="footer-links">
+      <a href="https://owockibot.xyz/bounty/" target="_blank">owockibot bounty #246</a>
+      <a href="https://owockibot.xyz/api/bounty-board" target="_blank">API: bounty-board</a>
+      <a href="https://github.com/nou-techne/owockibot-analytics" target="_blank">Source</a>
+    </div>
+  </footer>
+
   <script>
-    // Utility functions
-    function truncateAddress(addr) {
+    // --- Utility ---
+    function truncate(addr) {
       if (!addr) return '—';
       return `${addr.slice(0, 6)}...${addr.slice(-4)}`;
     }
-    
-    function getISOWeek(date) {
-      const d = new Date(date);
+
+    function getISOWeek(dateStr) {
+      const d = new Date(dateStr);
       d.setHours(0, 0, 0, 0);
       d.setDate(d.getDate() + 4 - (d.getDay() || 7));
       const yearStart = new Date(d.getFullYear(), 0, 1);
       const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
       return `${d.getFullYear()}-W${String(weekNo).padStart(2, '0')}`;
     }
-    
+
     function formatDuration(ms) {
-      const hours = ms / (1000 * 60 * 60);
-      if (hours < 48) {
-        return `${Math.round(hours)}h`;
-      }
-      const days = hours / 24;
-      return `${Math.round(days)}d`;
+      const h = ms / 3600000;
+      if (h < 48) return `${Math.round(h)}h`;
+      return `${Math.round(h / 24)}d`;
     }
-    
+
     function median(arr) {
-      if (arr.length === 0) return 0;
-      const sorted = [...arr].sort((a, b) => a - b);
-      const mid = Math.floor(sorted.length / 2);
-      return sorted.length % 2 === 0 
-        ? (sorted[mid - 1] + sorted[mid]) / 2 
-        : sorted[mid];
+      if (!arr.length) return 0;
+      const s = [...arr].sort((a, b) => a - b);
+      const m = Math.floor(s.length / 2);
+      return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
     }
-    
-    // Main data loading
+
+    // Techne-ish palette for Chart.js
+    const C = {
+      primary: '#c4956a',
+      primaryFill: 'rgba(196,149,106,0.15)',
+      green: '#8aba8a',
+      greenFill: 'rgba(138,186,138,0.12)',
+      blue: '#7a9ab5',
+      muted: '#777777',
+      border: '#2a2a2a',
+      text: '#c8c2ba',
+    };
+
+    Chart.defaults.color = C.text;
+    Chart.defaults.borderColor = C.border;
+
+    // --- Load data ---
     async function loadData() {
       try {
-        const [bountiesRes, statsRes] = await Promise.all([
+        const [r1, r2] = await Promise.all([
           fetch('https://www.owockibot.xyz/api/bounty-board'),
-          fetch('https://www.owockibot.xyz/api/bounty-board/stats')
+          fetch('https://www.owockibot.xyz/api/bounty-board/stats'),
         ]);
-        
-        if (!bountiesRes.ok || !statsRes.ok) {
-          throw new Error('Failed to fetch data');
-        }
-        
-        const bounties = await bountiesRes.json();
-        const stats = await statsRes.json();
-        
-        renderDashboard(bounties, stats);
-        
-      } catch (error) {
+        if (!r1.ok || !r2.ok) throw new Error('API request failed');
+        const [bounties, stats] = await Promise.all([r1.json(), r2.json()]);
+        render(bounties, stats);
+      } catch (err) {
         document.getElementById('loading').style.display = 'none';
-        const errorEl = document.getElementById('error');
-        errorEl.textContent = `Error loading data: ${error.message}`;
-        errorEl.style.display = 'block';
+        const el = document.getElementById('error');
+        el.textContent = `Could not load data: ${err.message}`;
+        el.style.display = 'block';
       }
     }
-    
-    function renderDashboard(bounties, stats) {
-      // Calculate derived metrics
+
+    function render(bounties, stats) {
       const completed = bounties.filter(b => b.status === 'completed');
+
       const uniqueBuilders = new Set(
-        completed
-          .map(b => b.claimer_address)
-          .filter(addr => addr && addr.trim())
+        completed.map(b => b.claimer_address).filter(Boolean)
       ).size;
-      
+
       const completionTimes = completed
         .map(b => new Date(b.updated_at) - new Date(b.created_at))
         .filter(t => t > 0);
-      
-      const medianCompletion = median(completionTimes);
-      
-      // Update stat cards
+
+      // Stats row
       document.getElementById('total-bounties').textContent = stats.total;
       document.getElementById('total-paid').textContent = `$${stats.total_volume_usdc}`;
       document.getElementById('unique-builders').textContent = uniqueBuilders;
-      document.getElementById('median-completion').textContent = formatDuration(medianCompletion);
-      
-      // Render charts
-      renderActivityChart(bounties);
-      renderStatusChart(stats);
-      renderUSDCChart(bounties);
+      document.getElementById('median-completion').textContent = formatDuration(median(completionTimes));
+      document.getElementById('stat-completed').textContent = stats.completed;
+      document.getElementById('stat-open').textContent = stats.open;
+
+      renderActivity(bounties);
+      renderStatus(stats);
+      renderUSDC(bounties);
       renderLeaderboard(bounties);
-      
-      // Show content
+
       document.getElementById('loading').style.display = 'none';
       document.getElementById('content').style.display = 'block';
     }
-    
-    function renderActivityChart(bounties) {
-      const weeklyData = {};
-      
+
+    function renderActivity(bounties) {
+      const weeks = {};
       bounties.forEach(b => {
-        const createdWeek = getISOWeek(b.created_at);
-        if (!weeklyData[createdWeek]) {
-          weeklyData[createdWeek] = { created: 0, completed: 0 };
-        }
-        weeklyData[createdWeek].created++;
-        
+        const cw = getISOWeek(b.created_at);
+        if (!weeks[cw]) weeks[cw] = { created: 0, completed: 0 };
+        weeks[cw].created++;
         if (b.status === 'completed') {
-          const completedWeek = getISOWeek(b.updated_at);
-          if (!weeklyData[completedWeek]) {
-            weeklyData[completedWeek] = { created: 0, completed: 0 };
-          }
-          weeklyData[completedWeek].completed++;
+          const dw = getISOWeek(b.updated_at);
+          if (!weeks[dw]) weeks[dw] = { created: 0, completed: 0 };
+          weeks[dw].completed++;
         }
       });
-      
-      const weeks = Object.keys(weeklyData).sort();
-      let cumulativeCreated = 0;
-      let cumulativeCompleted = 0;
-      
-      const createdData = weeks.map(week => {
-        cumulativeCreated += weeklyData[week].created;
-        return cumulativeCreated;
-      });
-      
-      const completedData = weeks.map(week => {
-        cumulativeCompleted += weeklyData[week].completed;
-        return cumulativeCompleted;
-      });
-      
+
+      const labels = Object.keys(weeks).sort();
+      let cc = 0, dc = 0;
+      const created = labels.map(w => (cc += weeks[w].created));
+      const done    = labels.map(w => (dc += weeks[w].completed));
+
       new Chart(document.getElementById('activity-chart'), {
         type: 'line',
         data: {
-          labels: weeks,
+          labels,
           datasets: [
-            {
-              label: 'Created',
-              data: createdData,
-              borderColor: '#f4c542',
-              backgroundColor: 'rgba(244, 197, 66, 0.1)',
-              tension: 0.3
-            },
-            {
-              label: 'Completed',
-              data: completedData,
-              borderColor: '#4CAF50',
-              backgroundColor: 'rgba(76, 175, 80, 0.1)',
-              tension: 0.3
-            }
+            { label: 'Created',   data: created, borderColor: C.primary, backgroundColor: C.primaryFill, tension: 0.3, pointRadius: 3 },
+            { label: 'Completed', data: done,    borderColor: C.green,   backgroundColor: C.greenFill,   tension: 0.3, pointRadius: 3 },
           ]
         },
         options: {
           responsive: true,
-          maintainAspectRatio: true,
-          plugins: {
-            legend: {
-              labels: { color: '#e0e0e0' }
-            }
-          },
+          plugins: { legend: { labels: { color: C.text, font: { family: 'IBM Plex Mono', size: 11 } } } },
           scales: {
-            x: { 
-              ticks: { color: '#999' },
-              grid: { color: 'rgba(244, 197, 66, 0.1)' }
-            },
-            y: { 
-              ticks: { color: '#999' },
-              grid: { color: 'rgba(244, 197, 66, 0.1)' }
-            }
+            x: { ticks: { color: C.muted, font: { family: 'IBM Plex Mono', size: 10 } }, grid: { color: C.border } },
+            y: { ticks: { color: C.muted, font: { family: 'IBM Plex Mono', size: 10 } }, grid: { color: C.border } },
           }
         }
       });
     }
-    
-    function renderStatusChart(stats) {
+
+    function renderStatus(stats) {
       new Chart(document.getElementById('status-chart'), {
         type: 'doughnut',
         data: {
           labels: ['Completed', 'Claimed', 'Submitted', 'Open', 'Cancelled'],
           datasets: [{
-            data: [
-              stats.completed,
-              stats.claimed,
-              stats.submitted,
-              stats.open,
-              stats.cancelled
-            ],
-            backgroundColor: [
-              '#4CAF50',
-              '#2196F3',
-              '#FF9800',
-              '#f4c542',
-              '#666'
-            ]
+            data: [stats.completed, stats.claimed, stats.submitted, stats.open, stats.cancelled],
+            backgroundColor: [C.green, C.blue, C.primary, '#c4956a88', '#44444488'],
+            borderColor: '#0a0a0a',
+            borderWidth: 2,
           }]
         },
         options: {
           responsive: true,
-          maintainAspectRatio: true,
           plugins: {
             legend: {
               position: 'bottom',
-              labels: { color: '#e0e0e0' }
+              labels: { color: C.text, font: { family: 'IBM Plex Mono', size: 11 }, padding: 12 }
             }
           }
         }
       });
     }
-    
-    function renderUSDCChart(bounties) {
-      const weeklyUSDC = {};
-      
+
+    function renderUSDC(bounties) {
+      const weeks = {};
       bounties
         .filter(b => b.status === 'completed')
         .forEach(b => {
-          const week = getISOWeek(b.updated_at);
-          weeklyUSDC[week] = (weeklyUSDC[week] || 0) + b.reward_usdc;
+          const w = getISOWeek(b.updated_at);
+          weeks[w] = (weeks[w] || 0) + b.reward_usdc;
         });
-      
-      const weeks = Object.keys(weeklyUSDC).sort();
-      const values = weeks.map(w => weeklyUSDC[w]);
-      
+
+      const labels = Object.keys(weeks).sort();
+      const values = labels.map(w => weeks[w]);
+
       new Chart(document.getElementById('usdc-chart'), {
         type: 'bar',
         data: {
-          labels: weeks,
+          labels,
           datasets: [{
-            label: 'USDC Paid',
+            label: 'USDC',
             data: values,
-            backgroundColor: 'rgba(244, 197, 66, 0.6)',
-            borderColor: '#f4c542',
-            borderWidth: 1
+            backgroundColor: C.primaryFill,
+            borderColor: C.primary,
+            borderWidth: 1,
           }]
         },
         options: {
           responsive: true,
-          maintainAspectRatio: true,
-          plugins: {
-            legend: {
-              labels: { color: '#e0e0e0' }
-            }
-          },
+          plugins: { legend: { display: false } },
           scales: {
-            x: { 
-              ticks: { color: '#999' },
-              grid: { color: 'rgba(244, 197, 66, 0.1)' }
-            },
-            y: { 
-              ticks: { color: '#999' },
-              grid: { color: 'rgba(244, 197, 66, 0.1)' }
-            }
+            x: { ticks: { color: C.muted, font: { family: 'IBM Plex Mono', size: 10 } }, grid: { color: C.border } },
+            y: { ticks: { color: C.muted, font: { family: 'IBM Plex Mono', size: 10 } }, grid: { color: C.border } },
           }
         }
       });
     }
-    
+
     function renderLeaderboard(bounties) {
       const builders = {};
-      
       bounties
         .filter(b => b.status === 'completed' && b.claimer_address)
         .forEach(b => {
-          const addr = b.claimer_address;
-          if (!builders[addr]) {
-            builders[addr] = { completed: 0, usdc: 0 };
-          }
-          builders[addr].completed++;
-          builders[addr].usdc += b.reward_usdc;
+          const a = b.claimer_address;
+          if (!builders[a]) builders[a] = { completed: 0, usdc: 0 };
+          builders[a].completed++;
+          builders[a].usdc += b.reward_usdc;
         });
-      
-      const sorted = Object.entries(builders)
+
+      const rows = Object.entries(builders)
         .sort((a, b) => b[1].usdc - a[1].usdc)
         .slice(0, 10);
-      
-      const tbody = document.getElementById('leaderboard-body');
-      tbody.innerHTML = sorted.map(([addr, data], idx) => `
-        <tr>
-          <td class="rank">#${idx + 1}</td>
-          <td class="wallet">${truncateAddress(addr)}</td>
-          <td>${data.completed}</td>
-          <td style="color: #f4c542; font-weight: bold;">$${data.usdc}</td>
-        </tr>
-      `).join('');
+
+      document.getElementById('leaderboard-body').innerHTML = rows
+        .map(([addr, d], i) => `
+          <tr>
+            <td class="rank">#${i + 1}</td>
+            <td class="wallet">${truncate(addr)}</td>
+            <td>${d.completed}</td>
+            <td class="usdc-value">$${d.usdc}</td>
+          </tr>`)
+        .join('');
     }
-    
-    // Initialize on load
+
     loadData();
   </script>
+
 </body>
 </html>
